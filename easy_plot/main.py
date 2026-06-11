@@ -293,7 +293,11 @@ class Figure():
             else:
                 # Plot y data with X = index and default format
                 y = args[0]
-                x = np.arange(0, len(y) + 1, 1)
+                if isinstance(y, (list, tuple, np.ndarray)):
+                    x = np.arange(0, len(y) + 1, 1)
+                else:
+                    # Single y value plotted
+                    x = y
             fmt = self.default_fmt
 
         return x, y, fmt
