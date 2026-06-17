@@ -85,13 +85,22 @@ class Figure():
         col_idx: int = 0,
         xticklabel_fontsize: int | None = None,
         yticklabel_fontsize: int | None = None,
+        plot_type: str = "plot",
         **kwargs
     ):
         """ Add data to the axes """
         ax = self._getAx(row_idx, col_idx)
 
         x, y, fmt = self._unpack_plot_args(args)
-        ax.plot(x, y, fmt, mec=mec, mfc=mfc, **kwargs)
+        plot_method = getattr(ax, plot_type)
+
+        if plot_method == "plot":
+            kwargs["mec"], kwargs["mfc"] = mec, mfc
+            args = (x, y, fmt)
+        elif plot_method == "bar":
+            args = (x, y)
+        
+        plot_method(*args, **kwargs)
 
         # Extract label fontsizes if given
         axis_labels = {}
@@ -130,6 +139,14 @@ class Figure():
 
         if self.legend_on:
             ax.legend(fontsize=self.legend_fontsize)
+
+
+    def bar(self, *args, **kwargs):
+        """ Create a bar chart. Interface to self.plot """
+        x, y, fmt = self._unpack_plot_args(args)
+        kwargs["color"] = fmt[0]
+        kwargs["zorder"] = 9999 # Always draw bars on top of grid
+        return self.plot(x, y, **kwargs, plot_type="bar")
 
 
     def legend(
@@ -279,10 +296,15 @@ class Figure():
         plt.show()
 
 
-    def save_as_pickle(self, filename: str | Path = "figure"):
-        """ Save the Figure's fig attribute as a pickle file """
-        if not filename.endswith(".pkl"):
-            filename += ".pkl"
+    def save_interactive(self, filename: str | Path = "figure"):
+        """
+        Save this Figure's fig attribute as interactive file
+
+        TODO: this currently relies on pickle. Must transition to
+        custom format for maximum compatibility
+        """
+        if not filename.endswith(".eplot"):
+            filename += ".eplot"
         with open(filename, "wb") as f:
             pickle.dump(self.fig, f)
 

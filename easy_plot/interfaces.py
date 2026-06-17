@@ -14,5 +14,10 @@ def plot(*args, **kwargs):
     fig.plot(*args, *kwargs)
 
 
+def scatter(*args, **kwargs):
+    fig = Figure()
+    fig.plot(*args, **kwargs)
+
+
 def show():
     plt.show()
