@@ -7,7 +7,6 @@ Matplotlib wrapper for easier and cleaner plot scripting
 """
 
 from pathlib import Path
-from dataclasses import dataclass
 from typing import get_args
 import pickle
 
@@ -71,6 +70,7 @@ class Figure():
         self.all_figs.append(self)
 
 
+    ### Plotting methods
     def plot(
         self,
         *args, # x, y, fmt
@@ -138,6 +138,11 @@ class Figure():
             ax.legend(fontsize=self.legend_fontsize)
 
 
+    def scatter(self, *args, **kwargs):
+        """ Create a scatter plot. Interface directly to self.plot """
+        return self.plot(*args, **kwargs)
+
+
     def bar(self, *args, **kwargs):
         """ Create a bar chart. Interface to self.plot """
         x, y, fmt = self._unpack_plot_args(args)
@@ -146,6 +151,58 @@ class Figure():
         return self.plot(x, y, **kwargs, plot_type="bar")
 
 
+    def hline(
+        self,
+        y,
+        xmin: int = 0,
+        xmax: int = 0,
+        row_idx: int = 0,
+        col_idx: int = 0,
+        colour: str = "k",
+        linestyle: str = "--",
+        linewidth: float = 1.0,
+        **kwargs
+    ):
+        """ Draw a horizontal line spanning a given range. Defaults to full range """
+        ax = self._getAx(row_idx, col_idx)
+        kwargs["color"] = colour
+        kwargs["linestyle"] = linestyle
+        kwargs["linewidth"] = linewidth
+        ax.axhline(y, xmin=xmin, xmax=xmax, **kwargs)
+
+
+    def vline(
+        self,
+        x,
+        ymin: int = 0,
+        ymax: int = 0,
+        row_idx: int = 0,
+        col_idx: int = 0,
+        colour: str = "k",
+        linestyle: str = "--",
+        linewidth: float = 1.0,
+        **kwargs
+    ):
+        """ Draw a vertical line spanning a given range. Defaults to full range """
+        ax = self._getAx(row_idx, col_idx)
+        kwargs["color"] = colour
+        kwargs["linestyle"] = linestyle
+        kwargs["linewidth"] = linewidth
+        ax.axvline(x, ymin=ymin, ymax=ymax, **kwargs)
+
+
+    def hline_full(self, y, row_idx: int = 0, col_idx: int = 0, **kwargs):
+        """ Draw a horizontal line spanning the full width of the given axis """
+        return self.hline(y, xmin=0, xmax=1, row_idx=row_idx, col_idx=col_idx, **kwargs)
+
+
+    def vline_full(self, x, row_idx: int = 0, col_idx: int = 0, **kwargs):
+        """ Draw a vertical line spanning the full height of the given axis """
+        return self.vline(x, ymin=0, ymax=1, row_idx=row_idx, col_idx=col_idx, **kwargs)
+
+
+
+    ### Text handling
     def legend(
         self,
         loc = "best",
@@ -224,13 +281,6 @@ class Figure():
         """ Interface to add_text to also force drawing of bounding box """
         kwargs["box"] = True
         self.add_text(*args, **kwargs)
-
-
-    def axline(
-        self,
-        pos: float
-    ):
-        """ Draw a horizontal or vertical line spanning the full width/height of the axes """
 
 
     def set_axis_spine_colour(
