@@ -76,8 +76,8 @@ class Figure():
         *args, # x, y, fmt
         mfc: str | None = "none",
         mec: str | None = None,
-        xlabel: str | dict | LabelCfg = "X",
-        ylabel: str | dict | LabelCfg = "Y",
+        xlabel: str | dict | LabelCfg | None = "X",
+        ylabel: str | dict | LabelCfg | None = "Y",
         row_idx: int = 0,
         col_idx: int = 0,
         xticklabel_fontsize: int | None = None,
@@ -114,20 +114,25 @@ class Figure():
                 )
             elif isinstance(lab_obj, str):
                 lab_obj = LabelCfg(lab_obj, self.default_fontsize)
+            elif isinstance(lab_obj, None):
+                axis_labels[name] = None
             else:
                 raise TypeError(
                     f"Unexpected type for {name}label. Expected str | dict | LabelCfg but got {type(lab_obj)}"
                 )
 
-            lab = getattr(lab_obj, "label", name)
-            fsize = getattr(lab_obj, "fontsize", self.default_fontsize)
+            if lab_obj is not None:
+                lab = getattr(lab_obj, "label", name)
+                fsize = getattr(lab_obj, "fontsize", self.default_fontsize)
 
-            axis_labels[name] = {
-                "label": lab, "fontsize": fsize
-            }
+                axis_labels[name] = {
+                    "label": lab, "fontsize": fsize
+                }
 
-        ax.set_xlabel(axis_labels["x"]["label"], fontsize=axis_labels["x"]["fontsize"])
-        ax.set_ylabel(axis_labels["y"]["label"], fontsize=axis_labels["y"]["fontsize"])
+        if axis_labels["x"] is not None:
+            ax.set_xlabel(axis_labels["x"]["label"], fontsize=axis_labels["x"]["fontsize"])
+        if axis_labels["y"] is not None:
+            ax.set_ylabel(axis_labels["y"]["label"], fontsize=axis_labels["y"]["fontsize"])
 
         if xticklabel_fontsize is not None:
             ax.tick_params(axis="x", which="major", labelsize=xticklabel_fontsize)
