@@ -91,10 +91,11 @@ class Figure():
         x, y, fmt = self._unpack_plot_args(args)
         plot_method = getattr(ax, plot_type)
 
-        if plot_method == "plot":
-            kwargs["mec"], kwargs["mfc"] = mec, mfc
+        if plot_type == "plot":
+            kwargs["markeredgecolor"] = mec
+            kwargs["markerfacecolor"] = mfc
             args = (x, y, fmt)
-        elif plot_method == "bar":
+        elif plot_type == "bar":
             args = (x, y)
         
         plot_method(*args, **kwargs)
