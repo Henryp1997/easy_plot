@@ -69,6 +69,11 @@ class Figure():
         # Keep track of this instance in the class attribute `all_figs`
         self.all_figs.append(self)
 
+        # For controlling daughter Figures.
+        # (Click events can be configured to plot data on another figure)
+        self.has_daughter = False
+        self.daughter = None
+
 
     ### Plotting methods
     def plot(
@@ -83,22 +88,36 @@ class Figure():
         xticklabel_fontsize: int | None = None,
         yticklabel_fontsize: int | None = None,
         plot_type: str = "plot",
+        connect_data: dict | None = None,
         **kwargs
     ):
         """ Add data to the axes """
         ax = self._getAx(row_idx, col_idx)
 
         x, y, fmt = self._unpack_plot_args(args)
-        plot_method = getattr(ax, plot_type)
 
+        # Only create connected daughter Figure for plots of singular points
+        create_daughter = self._shouldCreateDaughter(x, y, connect_data)
+
+        if self.daughter is not None:
+            kwargs["picker"] = 5 # 5 point click radius
+
+        if create_daughter:
+            self.has_daughter = True
+            self.daughter = Figure(figsize=(6, 3))
+
+        # Execute plot method
         if plot_type == "plot":
             kwargs["markeredgecolor"] = mec
             kwargs["markerfacecolor"] = mfc
-            args = (x, y, fmt)
+            point, = ax.plot(x, y, fmt, **kwargs)
+            # Connect click event to daughter Figure
+            if self.daughter is not None:
+                self._connectToDaughter(connect_data, point)
+
         elif plot_type == "bar":
-            args = (x, y)
-        
-        plot_method(*args, **kwargs)
+            print(kwargs["color"])
+            ax.bar(x, y, **kwargs)
 
         # Extract label fontsizes if given
         axis_labels = {}
@@ -149,10 +168,33 @@ class Figure():
         return self.plot(*args, **kwargs)
 
 
-    def bar(self, *args, **kwargs):
+    def bar(self, *args, colour: str | tuple | list | None = None, **kwargs):
         """ Create a bar chart. Interface to self.plot """
         x, y, fmt = self._unpack_plot_args(args)
-        kwargs["color"] = fmt[0]
+
+        if colour is None:
+            if not kwargs.get("color"):
+                # Get colour from format string if not specified elsewhere
+                kwargs["color"] = fmt[0]
+        else:
+            if isinstance(colour, (list, tuple, np.ndarray)):
+                ncols, ndata = len(colour), len(x)
+                if ncols > 1:
+                    if ncols != ndata:
+                        print(
+                            f"Length of 'colour' did not match length of data ({ncols} != {ndata}). "\
+                            f"Setting colour to first colour value, '{colour[0]}'"
+                        )
+                        colour = colour[0]
+
+            elif isinstance(colour, str):
+                if not colour.startswith("#"):
+                    # Colour is a string of multiple letters
+                    colour = [c for c in colour]
+
+            kwargs["color"] = colour
+
+
         kwargs["zorder"] = 9999 # Always draw bars on top of grid
         return self.plot(x, y, **kwargs, plot_type="bar")
 
@@ -328,6 +370,8 @@ class Figure():
     def show(self):
         """ Show only this object's figure by marking this instance as visible """
         self.visible_figs.append(self)
+        if self.has_daughter:
+            self.visible_figs.append(self.daughter)
 
 
     @classmethod
@@ -410,3 +454,30 @@ class Figure():
             ax = self.axes
 
         return ax
+
+
+    def _shouldCreateDaughter(self, x, y, connect_data: dict) -> bool:
+        """ Determine whether a daughter Figure should be created or not """
+        if self.daughter is None:
+            if connect_data is not None:
+                for data in (x, y):
+                    if isinstance(data, (np.ndarray, list, tuple)):
+                        return False
+                return True
+        return False
+
+
+    def _connectToDaughter(self, connect_data: dict, point: mpl.lines.Line2D) -> bool:
+        """ Connect this Figure to a daughter Figure with the given data """
+        x, y = connect_data.get("x"), connect_data.get("y")
+        if x is None or y is None:
+            raise ValueError("Expected 'x' and 'y' data in `connect_data` dict")
+
+        fmt = connect_data.get("fmt", "ko")
+
+        def on_pick(event, x=x, y=y, fmt=fmt):
+            if event.artist is point:
+                self.daughter.plot(x, y, fmt)
+                self.daughter.fig.canvas.draw_idle()
+
+        self.fig.canvas.mpl_connect("pick_event", on_pick)
