@@ -1,6 +1,6 @@
 [project]
 name = "easy-plot"
-version = "0.1.0"
+version = "0.1.1"
 description = "Matplotlib wrapper for ease of plot creation and control"
 authors = [
     {name = "Henry Pickersgill",email = "htap2@live.co.uk"}
