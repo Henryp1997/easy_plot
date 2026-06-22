@@ -19,5 +19,11 @@ def scatter(*args, **kwargs):
     fig.plot(*args, **kwargs)
 
 
-def show():
-    plt.show()
+def display():
+    """
+    Interface to Figure.display()
+    Shows all Figure objects marked as visible with fig.show().
+    If no Figures are marked as visible, calling this function
+    will show all created Figures
+    """
+    Figure.display()
