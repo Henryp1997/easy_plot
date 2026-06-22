@@ -7,7 +7,7 @@ Interfaces to commonly used plt methods, bypassing object oriented approach
 """
 from easy_plot import Figure, plt
 
-__all__ = ["plot", "show"]
+__all__ = ["plot", "display"]
 
 def plot(*args, **kwargs):
     fig = Figure()
