@@ -104,7 +104,7 @@ class Figure():
 
         if create_daughter:
             self.has_daughter = True
-            self.daughter = Figure(figsize=(6, 3))
+            self._createDaughter()
 
         # Execute plot method
         if plot_type == "plot":
@@ -464,6 +464,23 @@ class Figure():
                         return False
                 return True
         return False
+
+
+    def _createDaughter(self) -> None:
+        """ Create a daughter Figure connected to this instance """
+        self.daughter = Figure(figsize=(6, 3))
+        btn_pos = self.daughter.fig.add_axes([0.75, 0.9, 0.15, 0.075])
+        self.daughter.clear_btn = mpl.widgets.Button(btn_pos, "Clear data")
+        self.daughter.clear_btn.label.set_fontsize(10)
+
+        def on_click(_):
+            for artist in list(self.daughter.axes.lines):
+                artist.remove()
+            for artist in list(self.daughter.axes.collections):
+                artist.remove()
+            self.daughter.fig.canvas.draw_idle()
+
+        self.daughter.clear_btn.on_clicked(on_click)
 
 
     def _connectToDaughter(self, connect_data: dict, point: mpl.lines.Line2D) -> bool:
