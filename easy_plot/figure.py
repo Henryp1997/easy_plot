@@ -116,7 +116,6 @@ class Figure():
                 self._connectToDaughter(connect_data, point)
 
         elif plot_type == "bar":
-            print(kwargs["color"])
             ax.bar(x, y, **kwargs)
 
         # Extract label fontsizes if given
