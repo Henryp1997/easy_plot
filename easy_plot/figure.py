@@ -81,8 +81,8 @@ class Figure():
         *args, # x, y, fmt
         mfc: str | None = "none",
         mec: str | None = None,
-        xlabel: str | dict | LabelCfg | None = "X",
-        ylabel: str | dict | LabelCfg | None = "Y",
+        xlabel: str | dict | LabelCfg | None = None,
+        ylabel: str | dict | LabelCfg | None = None,
         row_idx: int = 0,
         col_idx: int = 0,
         xticklabel_fontsize: int | None = None,
@@ -134,7 +134,11 @@ class Figure():
             elif isinstance(lab_obj, str):
                 lab_obj = LabelCfg(lab_obj, self.default_fontsize)
             elif lab_obj is None:
-                axis_labels[name] = None
+                attr_label = getattr(self, f"{name}label", None)
+                if attr_label:
+                    lab_obj = LabelCfg(attr_label, self.default_fontsize)
+                else:
+                    axis_labels[name] = None
             else:
                 raise TypeError(
                     f"Unexpected type for {name}label. Expected str | dict | LabelCfg but got {type(lab_obj)}"
@@ -354,6 +358,18 @@ class Figure():
             ax.spines[spine].set_color(colour)
 
 
+    def set_xlabel(self, xlabel):
+        """ Interface to ax.set_xlabel. Also stores xlabel in self.xlabel. TODO: functionality for multi plots """
+        self.xlabel = xlabel
+        self.axes.set_xlabel(xlabel)
+
+
+    def set_ylabel(self, ylabel):
+        """ Interface to ax.set_ylabel. Also stores ylabel in self.ylabel. TODO: functionality for multi plots  """
+        self.ylabel = ylabel
+        self.axes.set_ylabel(ylabel)
+
+
     def remove_legend(self, row_idx: int = 0, col_idx: int = 0):
         """ TODO: fix for row AND col index """
         if self.legends:
@@ -469,7 +485,7 @@ class Figure():
     def _createDaughter(self) -> None:
         """ Create a daughter Figure connected to this instance """
         self.daughter = Figure(figsize=(6, 3))
-        btn_pos = self.daughter.fig.add_axes([0.75, 0.9, 0.15, 0.075])
+        btn_pos = self.daughter.fig.add_axes([0.75, 0.92, 0.15, 0.075])
         self.daughter.clear_btn = mpl.widgets.Button(btn_pos, "Clear data")
         self.daughter.clear_btn.label.set_fontsize(10)
 
@@ -490,6 +506,13 @@ class Figure():
             raise ValueError("Expected 'x' and 'y' data in `connect_data` dict")
 
         fmt = connect_data.get("fmt", "ko")
+        xlabel = connect_data.get("xlabel", "X")
+        ylabel = connect_data.get("ylabel", "Y")
+
+        self.daughter.set_xlabel(xlabel)
+        self.daughter.set_ylabel(ylabel)
+        self.daughter.fig.tight_layout()
+        self.daughter.fig.subplots_adjust(top=0.9, left=0.13)
 
         def on_pick(event, x=x, y=y, fmt=fmt):
             if event.artist is point:
