@@ -30,11 +30,12 @@ class Figure():
         grid_ls = "--",
         grid_lw = 0.5,
         legend_on: bool = False,
-        legend_fontsize: int = 8,
         nrows: int = 1,
         ncols: int = 1,
         figsize: tuple[int] = (12, 8),
-        default_fontsize: int = 10
+        default_label_fsize: int = 10,
+        default_legend_fsize: int = 10,
+        default_legend_alpha: float = 1.0
     ):
         self.fig, self.axes = plt.subplots(figsize=figsize, nrows=nrows, ncols=ncols)
         self.nrows, self.ncols = nrows, ncols
@@ -46,8 +47,6 @@ class Figure():
             self.fig.suptitle(self.title, y=0.95)
         else:
             self.axes.set_title(self.title)
-        self.default_fontsize = default_fontsize
-        self.default_fmt = "kx"
 
         # Grid and legend config
         axes = self.axes
@@ -63,7 +62,6 @@ class Figure():
                     ax.grid(ls=grid_ls, lw=grid_lw)
 
         self.legend_on = legend_on
-        self.legend_fontsize = legend_fontsize
         self.legends = []
 
         # Keep track of this instance in the class attribute `all_figs`
@@ -73,6 +71,12 @@ class Figure():
         # (Click events can be configured to plot data on another figure)
         self.has_daughter = False
         self.daughter = None
+
+        # Default parameters
+        self.default_label_fsize = default_label_fsize
+        self.default_fmt = "kx"
+        self.default_legend_fsize = default_legend_fsize
+        self.default_legend_alpha = default_legend_alpha
 
 
     ### Plotting methods
@@ -89,6 +93,7 @@ class Figure():
         yticklabel_fontsize: int | None = None,
         plot_type: str = "plot",
         connect_data: dict | None = None,
+        legend_alpha: float | None = None,
         **kwargs
     ):
         """ Add data to the axes """
@@ -129,14 +134,14 @@ class Figure():
             elif isinstance(lab_obj, dict):
                 lab_obj = LabelCfg(
                     lab_obj.get("label", name),
-                    lab_obj.get("fontsize", self.default_fontsize)
+                    lab_obj.get("fontsize", self.default_label_fsize)
                 )
             elif isinstance(lab_obj, str):
-                lab_obj = LabelCfg(lab_obj, self.default_fontsize)
+                lab_obj = LabelCfg(lab_obj, self.default_label_fsize)
             elif lab_obj is None:
                 attr_label = getattr(self, f"{name}label", None)
                 if attr_label:
-                    lab_obj = LabelCfg(attr_label, self.default_fontsize)
+                    lab_obj = LabelCfg(attr_label, self.default_label_fsize)
                 else:
                     axis_labels[name] = None
             else:
@@ -146,7 +151,7 @@ class Figure():
 
             if lab_obj is not None:
                 lab = getattr(lab_obj, "label", name)
-                fsize = getattr(lab_obj, "fontsize", self.default_fontsize)
+                fsize = getattr(lab_obj, "fontsize", self.default_label_fsize)
 
                 axis_labels[name] = {
                     "label": lab, "fontsize": fsize
@@ -163,7 +168,10 @@ class Figure():
             ax.tick_params(axis="y", which="major", labelsize=yticklabel_fontsize)
 
         if self.legend_on:
-            ax.legend(fontsize=self.legend_fontsize)
+            ax.legend(
+                fontsize=self.default_legend_fsize,
+                framealpha=legend_alpha or self.default_legend_alpha
+            )
 
 
     def scatter(self, *args, **kwargs):
@@ -260,6 +268,7 @@ class Figure():
         row_idx: int = 0,
         col_idx: int = 0,
         all_axes: bool = False,
+        legend_alpha: float = 1.0,
         fontsize: int | None = None
     ):
         """ Create a legend on a given axis """
@@ -273,7 +282,11 @@ class Figure():
 
         self.legends = []
         for ax in axes:
-            leg = ax.legend(loc=loc, fontsize=fontsize or self.legend_fontsize)
+            leg = ax.legend(
+                loc=loc,
+                framealpha=legend_alpha,
+                fontsize=fontsize or self.default_legend_fsize
+            )
             self.legends.append(leg)
 
 
