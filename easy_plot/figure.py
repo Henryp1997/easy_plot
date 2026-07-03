@@ -6,6 +6,7 @@ Matplotlib wrapper for easier and cleaner plot scripting
     - Author: Henry Pickersgill (2026)
 """
 
+import re
 from pathlib import Path
 from typing import get_args
 import pickle
@@ -100,6 +101,12 @@ class Figure():
         ax = self._getAx(row_idx, col_idx)
 
         x, y, fmt = self._unpack_plot_args(args)
+        arrows = False
+        if "->" in fmt[1:]:
+            # Custom arrow format found
+            # colour = re.search(r"[]")
+            fmt_color, fmt = self._parse_arrow_fmt(fmt)
+            arrows = True
 
         # Only create connected daughter Figure for plots of singular points
         create_daughter = self._shouldCreateDaughter(x, y, connect_data)
@@ -116,6 +123,10 @@ class Figure():
             kwargs["markeredgecolor"] = mec
             kwargs["markerfacecolor"] = mfc
             point, = ax.plot(x, y, fmt, **kwargs)
+
+            if arrows:
+                self._draw_arrows(ax, x, y, color=fmt_color)
+
             # Connect click event to daughter Figure
             if self.daughter is not None:
                 self._connectToDaughter(connect_data, point)
@@ -469,6 +480,47 @@ class Figure():
         return x, y, fmt
 
 
+    def _parse_arrow_fmt(self, fmt) -> str:
+        """
+        Parse a format (`fmt`) string containing the custom '->' format type
+        into a string understood by matplotlib plotting methods
+        """
+        base_colors = list(mpl.colors.BASE_COLORS.keys())
+        match = re.search(rf"[{''.join(base_colors)}]", fmt)
+        color = ""
+        if match is not None:
+            color = match.group(0)
+        base_markers = [
+            m for m in mpl.markers.MarkerStyle.markers.keys()
+            if m not in ("None", "none", " ", "")
+        ]
+        match = re.search(
+            rf"[{''.join([str(i) for i in base_markers])}]",
+            fmt
+        )
+        marker = "x"
+        if match is not None:
+            marker = match.group(0)
+        
+        fmt = f"{color}{marker}" # Remove '-' from fmt
+        return color, fmt
+
+
+    def _draw_arrows(self, ax, x, y, color) -> None:
+        """ Draw arrows connecting points if '->' marker fmt was specified """
+        for k in range(0, len(x) - 1):
+            ax.annotate(
+                "",
+                xy=(x[k + 1], y[k + 1]),
+                xytext=(x[k], y[k]),
+                arrowprops=dict(
+                    arrowstyle="->",
+                    color=color,
+                    lw=1,
+                ),
+            )
+
+
     def _getAx(self, row_idx: int, col_idx: int) -> mpl.axes.Axes:
         """ Get a single Axes object given row and column indices """
         if self.multi_plot:
@@ -484,6 +536,7 @@ class Figure():
         return ax
 
 
+    ### Daughter plot handling
     def _shouldCreateDaughter(self, x, y, connect_data: dict) -> bool:
         """ Determine whether a daughter Figure should be created or not """
         if self.daughter is None:
