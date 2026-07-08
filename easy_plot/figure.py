@@ -445,8 +445,8 @@ class Figure():
         TODO: this currently relies on pickle. Must transition to
         custom format for maximum compatibility
         """
-        if not filename.endswith(".eplot"):
-            filename += ".eplot"
+        if not filename.endswith(".pltex"):
+            filename += ".pltex"
         with open(filename, "wb") as f:
             pickle.dump(self.fig, f)
 
