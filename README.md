@@ -1,9 +1,9 @@
-# easy_plot
-`easy_plot` (https://github.com/Henryp1997/easy_plot) is a tool to aid programmers in creating Matplotlib figures quicker and easier. It is intended to remove a lot of the boilerplate involved in creating plots using Matplotlib. It also includes additional features, such as the ability to save .pltex files, which are serialised `Figure` objects, with the intention of being able to view these as _interactive figures_.
+# pltex
+`pltex` (Matplotlib Extended) is a tool to aid programmers in creating Matplotlib figures quicker and easier. It is intended to remove a lot of the boilerplate involved in creating plots using Matplotlib. It also includes additional features, such as the ability to save .pltex files, which are serialised `Figure` objects, with the intention of being able to view these as _interactive figures_.
 
 ## Example
 ```
-from easy_plot import Figure, np
+from pltex import Figure, np
 
 fig = Figure(title="Test figure", figsize=(8, 5), legend_on=True)
 x = np.array(list(range(10)))

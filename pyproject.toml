@@ -1,7 +1,7 @@
 [project]
-name = "easy-plot"
+name = "pltex"
 version = "0.1.1"
-description = "Matplotlib wrapper for ease of plot creation and control"
+description = "Matplotlib extension and wrapper for ease of plot creation and control"
 authors = [
     {name = "Henry Pickersgill",email = "htap2@live.co.uk"}
 ]
