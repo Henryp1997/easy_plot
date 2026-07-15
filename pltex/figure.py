@@ -361,20 +361,51 @@ class Figure():
             ax.spines[spine].set_color(colour)
 
 
-    def set_xlabel(self, xlabel):
-        """ Interface to ax.set_xlabel. Also stores xlabel in self.xlabel. TODO: functionality for multi plots """
-        self.xlabel = xlabel
-        self.axes.set_xlabel(xlabel)
+    def set_xlabel(
+        self,
+        xlabel: str,
+        row_idx: int = 0,
+        col_idx: int = 0,
+        fontsize: int | None = None
+    ):
+        """ Interface to self._set_label """
+        self._set_label("x", xlabel, row_idx, col_idx, fontsize)
 
 
-    def set_ylabel(self, ylabel):
-        """ Interface to ax.set_ylabel. Also stores ylabel in self.ylabel. TODO: functionality for multi plots  """
-        self.ylabel = ylabel
-        self.axes.set_ylabel(ylabel)
+    def set_ylabel(
+        self,
+        ylabel: str,
+        row_idx: int = 0,
+        col_idx: int = 0,
+        fontsize: int | None = None
+    ):
+        """ Interface to self._set_label """
+        self._set_label("y", ylabel, row_idx, col_idx, fontsize)
+
+
+    def _set_label(
+        self,
+        axis: str,
+        label: str,
+        row_idx: int = 0,
+        col_idx: int = 0,
+        fontsize: int | None = None
+    ):
+        """ Interface to ax.set_xlabel or ax.set_ylabel """
+        ax = self._getAx(row_idx, col_idx)
+        if axis == "x":
+            self.xlabel = label
+        else:
+            self.ylabel = label
+        
+        if fontsize is None:
+            fontsize = self.default_label_fsize
+        
+        getattr(ax, f"set_{axis}label")(label, fontsize=fontsize)
 
 
     def remove_legend(self, row_idx: int = 0, col_idx: int = 0):
-        """ TODO: fix for row AND col index """
+        """ Remove the legend from a specified axis """
         if self.legends:
             ax = self._getAx(row_idx, col_idx)
             ax.get_legend().remove()
