@@ -5,7 +5,7 @@ Interfaces to commonly used plt methods, bypassing object oriented approach
 
     - Author: Henry Pickersgill (2026)
 """
-from easy_plot import Figure, plt
+from pltex import Figure, plt
 
 __all__ = ["plot", "display"]
 

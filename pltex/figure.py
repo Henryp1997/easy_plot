@@ -17,7 +17,8 @@ import numpy as np
 import pandas as pd
 import scipy as sp
 
-from easy_plot.types import SPINE, SPINES, LabelCfg
+from pltex.types import SPINE, SPINES, LabelCfg
+from pltex.label_handler import extract_axis_labels
 
 
 class Figure():
@@ -104,7 +105,6 @@ class Figure():
         arrows = False
         if "->" in fmt[1:]:
             # Custom arrow format found
-            # colour = re.search(r"[]")
             fmt_color, fmt = self._parse_arrow_fmt(fmt)
             arrows = True
 
@@ -139,38 +139,13 @@ class Figure():
             ax.bar(x, y, **kwargs)
 
         # Extract label fontsizes if given
-        axis_labels = {}
-        for name, lab_obj in (
-            ("x", xlabel),
-            ("y", ylabel)
-        ):
-            if isinstance(lab_obj, LabelCfg):
-                pass
-            elif isinstance(lab_obj, dict):
-                lab_obj = LabelCfg(
-                    lab_obj.get("label", name),
-                    lab_obj.get("fontsize", self.default_label_fsize)
-                )
-            elif isinstance(lab_obj, str):
-                lab_obj = LabelCfg(lab_obj, self.default_label_fsize)
-            elif lab_obj is None:
-                attr_label = getattr(self, f"{name}label", None)
-                if attr_label:
-                    lab_obj = LabelCfg(attr_label, self.default_label_fsize)
-                else:
-                    axis_labels[name] = None
-            else:
-                raise TypeError(
-                    f"Unexpected type for {name}label. Expected str | dict | LabelCfg but got {type(lab_obj)}"
-                )
-
-            if lab_obj is not None:
-                lab = getattr(lab_obj, "label", name)
-                fsize = getattr(lab_obj, "fontsize", self.default_label_fsize)
-
-                axis_labels[name] = {
-                    "label": lab, "fontsize": fsize
-                }
+        axis_labels: dict = extract_axis_labels(
+            xlabel, ylabel, self.default_label_fsize,
+            current_labels={
+                "x": getattr(self, "xlabel", None),
+                "y": getattr(self, "ylabel", None)
+            }
+        )
 
         if axis_labels["x"] is not None:
             ax.set_xlabel(axis_labels["x"]["label"], fontsize=axis_labels["x"]["fontsize"])
