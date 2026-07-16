@@ -252,36 +252,7 @@ class Figure():
         return self.vline(x, ymin=0, ymax=1, row_idx=row_idx, col_idx=col_idx, **kwargs)
 
 
-
     ### Text handling
-    def legend(
-        self,
-        loc = "best",
-        row_idx: int = 0,
-        col_idx: int = 0,
-        all_axes: bool = False,
-        legend_alpha: float = 1.0,
-        fontsize: int | None = None
-    ):
-        """ Create a legend on a given axis """
-        if all_axes:
-            # Create a legend on all the available axes
-            axes = [self.axes] if not self.multi_plot else self.axes
-        else:
-            # Create a legend on specified axis only
-            ax = self._getAx(row_idx, col_idx)
-            axes = [ax] # Iterable for below loop
-
-        self.legends = []
-        for ax in axes:
-            leg = ax.legend(
-                loc=loc,
-                framealpha=legend_alpha,
-                fontsize=fontsize or self.default_legend_fsize
-            )
-            self.legends.append(leg)
-
-
     def add_text(
         self,
         pos,
@@ -337,6 +308,72 @@ class Figure():
         """ Interface to add_text to also force drawing of bounding box """
         kwargs["box"] = True
         self.add_text(*args, **kwargs)
+
+
+    ### Legend handling
+    def legend(
+        self,
+        loc = "best",
+        row_idx: int = 0,
+        col_idx: int = 0,
+        all_axes: bool = False,
+        legend_alpha: float = 1.0,
+        fontsize: int | None = None
+    ):
+        """ Create a legend on a given axis """
+        if all_axes:
+            # Create a legend on all the available axes
+            axes = [self.axes] if not self.multi_plot else self.axes
+        else:
+            # Create a legend on specified axis only
+            ax = self._getAx(row_idx, col_idx)
+            axes = [ax] # Iterable for below loop
+
+        self.legends = []
+        for ax in axes:
+            leg = ax.legend(
+                loc=loc,
+                framealpha=legend_alpha,
+                fontsize=fontsize or self.default_legend_fsize
+            )
+            self.legends.append(leg)
+
+    
+    def add_legend_label(
+        self,
+        *args,
+        row_idx: int = 0,
+        col_idx: int = 0
+    ):
+        """ Add a separate label to the legend not connected to any data points/lines """
+        if len(args) == 0:
+            print("pltex warning: No `label` or `fmt` specified in add_legend_label()")
+            label, fmt = "None", "k-"
+        elif len(args) == 1:
+            # Default to args containing `fmt` only
+            label = "None"
+            fmt = args[0]
+        elif len(args) == 2:
+            # Label and fmt specified
+            label, fmt = args
+        
+        # Dummy plot to add label to legend
+        self.plot(
+            np.nan, fmt, label=label, row_idx=row_idx, col_idx=col_idx
+        )
+        ax = self._getAx(row_idx, col_idx)
+        if ax.get_legend() is None:
+            print(
+                "pltex warning: specified axis has no legend. Set `legend_on=True` "\
+                "or call legend() before using add_legend_label()"
+            )
+
+
+    def remove_legend(self, row_idx: int = 0, col_idx: int = 0):
+        """ Remove the legend from a specified axis """
+        if self.legends:
+            ax = self._getAx(row_idx, col_idx)
+            ax.get_legend().remove()
 
 
     def set_axis_spine_colour(
@@ -404,13 +441,6 @@ class Figure():
             fontsize = self.default_label_fsize
         
         getattr(ax, f"set_{axis}label")(label, fontsize=fontsize)
-
-
-    def remove_legend(self, row_idx: int = 0, col_idx: int = 0):
-        """ Remove the legend from a specified axis """
-        if self.legends:
-            ax = self._getAx(row_idx, col_idx)
-            ax.get_legend().remove()
 
 
     def tight_layout(self, *args, **kwargs): return self.fig.tight_layout(*args, **kwargs)
