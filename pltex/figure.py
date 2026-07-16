@@ -122,21 +122,21 @@ class Figure():
         if plot_type == "plot":
             kwargs["markeredgecolor"] = mec
             kwargs["markerfacecolor"] = mfc
-            point, = ax.plot(x, y, fmt, **kwargs)
+            drawn_data, = ax.plot(x, y, fmt, **kwargs)
 
             if arrows:
                 color = fmt_color
                 if not fmt_color:
                     # No color present in fmt string
-                    color = point.get_color()
+                    color = drawn_data.get_color()
                 self._draw_arrows(ax, x, y, color=color)
 
             # Connect click event to daughter Figure
             if self.daughter is not None:
-                self._connectToDaughter(connect_data, point)
+                self._connectToDaughter(connect_data, drawn_data)
 
         elif plot_type == "bar":
-            ax.bar(x, y, **kwargs)
+            drawn_data, = ax.bar(x, y, **kwargs)
 
         # Extract label fontsizes if given
         axis_labels: dict = extract_axis_labels(
@@ -162,6 +162,8 @@ class Figure():
                 fontsize=self.default_legend_fsize,
                 framealpha=legend_alpha or self.default_legend_alpha
             )
+
+        return drawn_data, drawn_data.get_color()
 
 
     def scatter(self, *args, **kwargs):
