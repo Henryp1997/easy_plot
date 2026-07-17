@@ -5,7 +5,7 @@ Matplotlib wrapper for easier and cleaner plot scripting
 
     - Author: Henry Pickersgill (2026)
 """
-
+import re
 from typing import get_args
 
 import matplotlib.pyplot as plt
@@ -501,3 +501,27 @@ class Figure():
                 self.daughter.fig.canvas.draw_idle()
 
         self.fig.canvas.mpl_connect("pick_event", on_pick)
+
+
+    def __getattr__(self, attr):
+        """
+        Implement the ability to plot on a specific axis by
+        including the row and column index in the called method name.
+        E.g., fig.plot01(...) plots data on row_idx=0 and col_idx=1
+        """
+        match = re.fullmatch(r"plot(\d)(\d)", attr)
+
+        if match is None:
+            raise AttributeError(
+                f"{type(self).__name__} has no attribute {attr!r}"
+            )
+
+        row_idx = int(match.group(1))
+        col_idx = int(match.group(2))
+
+        def indexed_plot(*args, **kwargs):
+            kwargs.setdefault("row_idx", row_idx)
+            kwargs.setdefault("col_idx", col_idx)
+            return self.plot(*args, **kwargs)
+
+        return indexed_plot
